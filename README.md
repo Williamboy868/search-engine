@@ -30,9 +30,9 @@ The project creates an inverted index from scratch to enable fast searching.
 
 ### Index Generation
 
-The `main.py` script handles the loading, parsing, and indexing of the dataset.
+The `create-index.py` script handles the loading, parsing, and indexing of the dataset.
 
-1.  **Parsing (`parse`)**:
+1.  **Parsing (`parseDoc`)**:
     - Cleans the input text by stripping out `<page>`, `<title>`, `<text>`, and `<id>` tags.
     - Lowercases all words and splits the raw string into individual articles.
 2.  **Inverted Index Creation (`createInvertedIndex`)**:
@@ -45,7 +45,20 @@ The `main.py` script handles the loading, parsing, and indexing of the dataset.
 
 Run the indexer:
 ```bash
-python main.py
+python create-index.py
+```
+
+### Querying the Index
+
+The `query-index.py` script provides an interactive command-line interface to search the generated inverted index.
+It supports three types of queries:
+1. **One Word Query**: Returns documents containing a single word.
+2. **Free Text Query**: Returns documents containing ANY of the provided words (OR logic).
+3. **Phrase Query**: Returns documents containing the EXACT phrase, using positional alignments to verify the sequence.
+
+Run the query interface:
+```bash
+python query-index.py
 ```
 
 ## Technical Details

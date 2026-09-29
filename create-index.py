@@ -1,7 +1,7 @@
 import re
 import Stemmer
 
-def parse(doc):
+def parseDoc(doc):
     """using a for loop parse the document to separate articles by removing page tags and merging title and description
     Lowercase all words and store the result in a list"""
     print("parsing document")
@@ -33,11 +33,12 @@ def createInvertedIndex(documentList):
         if (docId + 1) % 5000 == 0:
             print(f"Processed {docId + 1}/{total_docs} documents...")
         iterator = p.finditer(document)
+        valid_word_position = 0
         for match in iterator:
             token = match.group()
             if token not in stop_words:
                 stemmed = stemmer.stemWord(token)
-                pos = match.start()
+                pos = valid_word_position
                 
                 if stemmed not in invertedIndex:
                     invertedIndex[stemmed] = []
@@ -46,6 +47,8 @@ def createInvertedIndex(documentList):
                     invertedIndex[stemmed].append([docId, [pos]])
                 else:
                     invertedIndex[stemmed][-1][1].append(pos)
+                
+                valid_word_position += 1
                     
     return invertedIndex
     
@@ -56,7 +59,7 @@ def main():
     """Orchestrates Inverted Index creating and writes result to text file"""
     with open('wikipedia_50000.txt','r',encoding='utf-8') as f:
         read_data = f.read()
-    parsed_data = parse(read_data)
+    parsed_data = parseDoc(read_data)
     invertedIndex = createInvertedIndex(parsed_data)
     print("writing index to disk...")
     # {web:[[1,[0,3]],[2,[2]]]}
