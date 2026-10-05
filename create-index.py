@@ -1,13 +1,24 @@
 import re
 import Stemmer
 
+ID_TAG = re.compile(r'<id>.*?</id>', re.DOTALL)
+TAGS = ("<page>", "<title>", "</title>", "<text>", "</text>")
+
 def parseDoc(doc):
     """using a for loop parse the document to separate articles by removing page tags and merging title and description
-    Lowercase all words and store the result in a list"""
+    Lowercase all words and store the result in a list
+    The <id> tag is removed together with its value, since Wikipedia page IDs are not used for searching.
+    Pieces that are empty after cleaning (e.g. the trailing newline after the last </page>) are skipped,
+    so every entry in the result is a real article and its list index is its document ID."""
     print("parsing document")
-    result = doc.lower().split("</page>")
-    for idx, i in enumerate(result):
-        result[idx] = i.replace("<page>", "").replace("</page>", "").replace("<title>", "").replace("</title>", "").replace("<text>", "").replace("</text>", "").replace("<id>", "").replace("</id>", "")
+    result = []
+    for piece in doc.lower().split("</page>"):
+        piece = ID_TAG.sub("", piece)
+        for tag in TAGS:
+            piece = piece.replace(tag, "")
+        piece = piece.strip()
+        if piece:
+            result.append(piece)
     return result
 
 
