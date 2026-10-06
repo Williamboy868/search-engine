@@ -99,6 +99,16 @@ def PhraseQuery(userQuery, index):
                 
     return result
 
+def checkQueryType(query, index):
+    splittedQuery = query.split(' ')
+    if len(splittedQuery) == 1:   
+        return oneWordQuery(query, index)
+    elif len(splittedQuery) == 2:
+        return FreeTextQuery(query, index)
+    else:
+        return PhraseQuery(query, index)
+
+
 def main():
     print("Loading index... (this may take a moment for large indices)")
     filepath = 'invertedIndex.txt'
@@ -110,23 +120,14 @@ def main():
         return
     
     while True:
-        query_type = input("\nEnter query type (1: One Word, 2: Free Text, 3: Phrase, 0: Exit): ")
-        if query_type == '0':
+        query = input("\nEnter query (or 0 to Exit): ")
+        if query == '0':
             break
-            
-        query = input("Enter query: ")
+        try:
+            res = checkQueryType(query, index)
+            print(f"Found {len(res)} documents: {res[:20]}{'...' if len(res) > 20 else ''}")
+        except Exception as e:
+            print(f"Error processing query: {e}")
         
-        if query_type == '1':
-            res = oneWordQuery(query, index)
-        elif query_type == '2':
-            res = FreeTextQuery(query, index)
-        elif query_type == '3':
-            res = PhraseQuery(query, index)
-        else:
-            print("Invalid query type. Please enter 1, 2, 3, or 0.")
-            continue
-            
-        print(f"Found {len(res)} documents: {res[:20]}{'...' if len(res) > 20 else ''}")
-
 if __name__ == "__main__":
     main()
