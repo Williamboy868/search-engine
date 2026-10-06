@@ -1,7 +1,7 @@
 import re
 import Stemmer
+from stopWords import STOP_WORDS
 
-STOP_WORDS = {"a", "an", "the", "by", "is", "they", "that", "them", "for", "are", "and", "in", "was", "were", "but", "as", "with", "of", "to", "it", "on", "at", "this", "or", "from", "which", "not", "be", "have", "has", "had", "will", "would", "shall", "should", "may", "might", "must", "can", "could"}
 PATTERN = re.compile(r'[a-z0-9]+')
 STEMMER = Stemmer.Stemmer('english')
 

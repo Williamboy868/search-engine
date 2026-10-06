@@ -1,5 +1,6 @@
 import re
 import Stemmer
+from stopWords import STOP_WORDS
 
 ID_TAG = re.compile(r'<id>.*?</id>', re.DOTALL)
 TAGS = ("<page>", "<title>", "</title>", "<text>", "</text>")
@@ -33,7 +34,6 @@ def createInvertedIndex(documentList):
      store each token in a hashtable with value as empty arrays
      For each key in the hashtable loop through the document list and update the empty list value with the start index of the key/token example: {web:[[1,[0,3]],[2,[2]]]} where the first value of each array is the document ID
     """
-    stop_words = {"a", "an", "the", "by", "is", "they", "that", "them", "for", "are", "and", "in", "was", "were", "but", "as", "with", "of", "to", "it", "on", "at", "this", "or", "from", "which", "not", "be", "have", "has", "had", "will", "would", "shall", "should", "may", "might", "must", "can", "could"}
     p = re.compile(r'[a-z0-9]+')
     stemmer = Stemmer.Stemmer('english')
     
@@ -47,7 +47,7 @@ def createInvertedIndex(documentList):
         valid_word_position = 0
         for match in iterator:
             token = match.group()
-            if token not in stop_words:
+            if token not in STOP_WORDS:
                 stemmed = stemmer.stemWord(token)
                 pos = valid_word_position
                 
