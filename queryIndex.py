@@ -50,25 +50,18 @@ def parseIndex(filepath):
             
     return invertedIndex
 
-def oneWordQuery(userQuery, index):
-    """Returns a list of docIDs for a single word query."""
+def AndQuery(userQuery, index):
+    """Returns a list of docIDs that contain ALL of the terms in the query."""
     terms = process_query(userQuery)
     if not terms:
         return []
-    
-    term = terms[0]
-    return list(index.get(term, {}).keys())
-
-def FreeTextQuery(userQuery, index):
-    """Returns a list of docIDs that contain ANY of the terms in the query."""
-    terms = process_query(userQuery)
-    docs = set()
-    
-    for term in terms:
-        # Get documents for this term and add to the set (Union)
-        docs.update(index.get(term, {}).keys())
         
-    return list(docs)
+    doc_sets = [set(index.get(term, {}).keys()) for term in terms]
+    if not doc_sets:
+        return []
+        
+    common_docs = set.intersection(*doc_sets)
+    return list(common_docs)
 
 def PhraseQuery(userQuery, index):
     """Returns a list of docIDs that contain the EXACT phrase."""
@@ -107,13 +100,11 @@ def PhraseQuery(userQuery, index):
     return result
 
 def checkQueryType(query, index):
-    splittedQuery = query.split(' ')
-    if len(splittedQuery) == 1:   
-        return oneWordQuery(query, index)
-    elif len(splittedQuery) == 2:
-        return FreeTextQuery(query, index)
+    query = query.strip()
+    if query.startswith('"') and query.endswith('"'):
+        return PhraseQuery(query[1:-1], index)
     else:
-        return PhraseQuery(query, index)
+        return AndQuery(query, index)
 
 
 def main():
@@ -131,6 +122,8 @@ def main():
         if query == '0':
             break
             
+        is_phrase = query.strip().startswith('"') and query.strip().endswith('"')
+        
         # Remove punctuation to avoid false positive spell corrections
         clean_query = " ".join(re.findall(r'[a-zA-Z0-9]+', query))
         
@@ -148,6 +141,9 @@ def main():
                     query = corrected_query
                 else:
                     query = clean_query
+
+            if is_phrase:
+                query = f'"{query}"'
 
             res = checkQueryType(query, index)
             print(f"Found {len(res)} documents: {res[:20]}{'...' if len(res) > 20 else ''}")
