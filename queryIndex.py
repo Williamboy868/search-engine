@@ -1,6 +1,13 @@
+import os
 import re
 import Stemmer
 from stopWords import STOP_WORDS
+import symspellpy
+
+# Initialize SymSpell for query correction
+sym_spell = symspellpy.SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
+dictionary_path = os.path.join(os.path.dirname(symspellpy.__file__), "frequency_dictionary_en_82_765.txt")
+sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
 
 PATTERN = re.compile(r'[a-z0-9]+')
 STEMMER = Stemmer.Stemmer('english')
@@ -123,7 +130,25 @@ def main():
         query = input("\nEnter query (or 0 to Exit): ")
         if query == '0':
             break
+            
+        # Remove punctuation to avoid false positive spell corrections
+        clean_query = " ".join(re.findall(r'[a-zA-Z0-9]+', query))
+        
+        if not clean_query:
+            print("Please enter a valid query.")
+            continue
+            
         try:
+            # Correct the query
+            suggestions = sym_spell.lookup_compound(clean_query, max_edit_distance=2, ignore_non_words=True)
+            if suggestions:
+                corrected_query = suggestions[0].term
+                if corrected_query.lower() != clean_query.lower():
+                    print(f"Showing search results for [{corrected_query}]")
+                    query = corrected_query
+                else:
+                    query = clean_query
+
             res = checkQueryType(query, index)
             print(f"Found {len(res)} documents: {res[:20]}{'...' if len(res) > 20 else ''}")
         except Exception as e:
