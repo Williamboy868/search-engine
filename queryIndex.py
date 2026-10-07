@@ -1,7 +1,14 @@
+import os
 import re
 import Stemmer
+from stopWords import STOP_WORDS
+import symspellpy
 
-STOP_WORDS = {"a", "an", "the", "by", "is", "they", "that", "them", "for", "are", "and", "in", "was", "were", "but", "as", "with", "of", "to", "it", "on", "at", "this", "or", "from", "which", "not", "be", "have", "has", "had", "will", "would", "shall", "should", "may", "might", "must", "can", "could"}
+# Initialize SymSpell for query correction
+sym_spell = symspellpy.SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
+dictionary_path = os.path.join(os.path.dirname(symspellpy.__file__), "frequency_dictionary_en_82_765.txt")
+sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
+
 PATTERN = re.compile(r'[a-z0-9]+')
 STEMMER = Stemmer.Stemmer('english')
 
@@ -43,25 +50,18 @@ def parseIndex(filepath):
             
     return invertedIndex
 
-def oneWordQuery(userQuery, index):
-    """Returns a list of docIDs for a single word query."""
+def AndQuery(userQuery, index):
+    """Returns a list of docIDs that contain ALL of the terms in the query."""
     terms = process_query(userQuery)
     if not terms:
         return []
-    
-    term = terms[0]
-    return list(index.get(term, {}).keys())
-
-def FreeTextQuery(userQuery, index):
-    """Returns a list of docIDs that contain ANY of the terms in the query."""
-    terms = process_query(userQuery)
-    docs = set()
-    
-    for term in terms:
-        # Get documents for this term and add to the set (Union)
-        docs.update(index.get(term, {}).keys())
         
-    return list(docs)
+    doc_sets = [set(index.get(term, {}).keys()) for term in terms]
+    if not doc_sets:
+        return []
+        
+    common_docs = set.intersection(*doc_sets)
+    return list(common_docs)
 
 def PhraseQuery(userQuery, index):
     """Returns a list of docIDs that contain the EXACT phrase."""
@@ -99,6 +99,14 @@ def PhraseQuery(userQuery, index):
                 
     return result
 
+def checkQueryType(query, index):
+    query = query.strip()
+    if query.startswith('"') and query.endswith('"'):
+        return PhraseQuery(query[1:-1], index)
+    else:
+        return AndQuery(query, index)
+
+
 def main():
     print("Loading index... (this may take a moment for large indices)")
     filepath = 'invertedIndex.txt'
@@ -110,23 +118,37 @@ def main():
         return
     
     while True:
-        query_type = input("\nEnter query type (1: One Word, 2: Free Text, 3: Phrase, 0: Exit): ")
-        if query_type == '0':
+        query = input("\nEnter query (or 0 to Exit): ")
+        if query == '0':
             break
             
-        query = input("Enter query: ")
+        is_phrase = query.strip().startswith('"') and query.strip().endswith('"')
         
-        if query_type == '1':
-            res = oneWordQuery(query, index)
-        elif query_type == '2':
-            res = FreeTextQuery(query, index)
-        elif query_type == '3':
-            res = PhraseQuery(query, index)
-        else:
-            print("Invalid query type. Please enter 1, 2, 3, or 0.")
+        # Remove punctuation to avoid false positive spell corrections
+        clean_query = " ".join(re.findall(r'[a-zA-Z0-9]+', query))
+        
+        if not clean_query:
+            print("Please enter a valid query.")
             continue
             
-        print(f"Found {len(res)} documents: {res[:20]}{'...' if len(res) > 20 else ''}")
+        try:
+            # Correct the query
+            suggestions = sym_spell.lookup_compound(clean_query, max_edit_distance=2, ignore_non_words=True)
+            if suggestions:
+                corrected_query = suggestions[0].term
+                if corrected_query.lower() != clean_query.lower():
+                    print(f"Showing search results for [{corrected_query}]")
+                    query = corrected_query
+                else:
+                    query = clean_query
 
+            if is_phrase:
+                query = f'"{query}"'
+
+            res = checkQueryType(query, index)
+            print(f"Found {len(res)} documents: {res[:20]}{'...' if len(res) > 20 else ''}")
+        except Exception as e:
+            print(f"Error processing query: {e}")
+        
 if __name__ == "__main__":
     main()

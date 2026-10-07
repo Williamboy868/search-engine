@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Added `invertedIndex.txt` to `.gitignore`.
 - Expanded the list of stop words to further reduce the index size.
 - Added progress logs in `createInvertedIndex` to track indexing status (prints every 5,000 documents).
+- Added `invertedIndex.md` to `.gitignore`.
 
 ### Changed
 - Renamed `main.py` to `create-index.py` to better reflect its purpose as the index builder.
@@ -24,3 +25,5 @@ All notable changes to this project will be documented in this file.
 - Fixed tokenization regex (`[a-z0-9]+` instead of `[a-z0-9]`) so it extracts full words rather than single characters.
 - Fixed a major index corruption bug where the actual document IDs were being overwritten by loop counter index values during the write phase.
 - Fixed an f-string syntax error that occurred in older Python versions when quoting strings inside the `.join()` method.
+- Fixed page splitting logic in `parseDoc` to prevent empty pieces from being added as documents.
+- Fixed `<id>` tag removal in `parseDoc` to use regex, ensuring the entire tag and its contents are removed.
