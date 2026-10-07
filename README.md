@@ -1,6 +1,11 @@
-# Search Engine Project
+# Building a Search Engine From Scratch
 
-This project is a custom search engine built to index and search through a large corpus of text data, demonstrating the core principles of information retrieval and text analysis.
+This is the companion code repository for the "Building a Search Engine From Scratch" blog series. The project demonstrates how to build a custom search engine from first principles—indexing and searching through a large corpus of text data using core information retrieval concepts.
+
+## The Blog Series
+
+- **Part 1:** [Building a Search Engine From Scratch — Part 1: The Inverted Index](invertedIndex.md)
+- **Part 2:** [Building a Search Engine From Scratch — Part 2: Querying the Inverted Index](queryIndex.md)
 
 ## Dataset
 
