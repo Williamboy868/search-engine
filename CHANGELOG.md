@@ -5,12 +5,13 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Authored `queryIndex.md`, a detailed blog post (Part 2) explaining the query engine, symmetric delete spelling correction, and AND vs Phrase queries from first principles.
 - Created `query-index.py` with an interactive CLI to query the inverted index.
 - Added support for One Word, Free Text (OR), and Phrase (exact match) queries.
 - Added `invertedIndex.txt` to `.gitignore`.
 - Expanded the list of stop words to further reduce the index size.
 - Added progress logs in `createInvertedIndex` to track indexing status (prints every 5,000 documents).
-- Added `invertedIndex.md` to `.gitignore`.
+- Added `invertedIndex.md` and `queryIndex.md` to `.gitignore`.
 
 ### Changed
 - Renamed `main.py` to `create-index.py` to better reflect its purpose as the index builder.
