@@ -4,8 +4,9 @@ This is the companion code repository for the "Building a Search Engine From Scr
 
 ## The Blog Series
 
-- **Part 1:** [Building a Search Engine From Scratch — Part 1: The Inverted Index](invertedIndex.md)
-- **Part 2:** [Building a Search Engine From Scratch — Part 2: Querying the Inverted Index](queryIndex.md)
+- **Part 1:** [Building a Search Engine From Scratch — Part 1: The Inverted Index](blog/buildingtheindex.md)
+- **Part 2:** [Building a Search Engine From Scratch — Part 2: Querying the Inverted Index](blog/addingquerying.md)
+- **Part 3:** [Building a Search Engine From Scratch — Part 3: Ranking Results with BM25 & Beyond](blog/addRanking.md)
 
 ## Dataset
 

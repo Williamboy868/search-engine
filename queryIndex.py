@@ -3,6 +3,7 @@ import re
 import Stemmer
 from stopWords import STOP_WORDS
 import symspellpy
+from rankResults import BM25Ranker, load_or_build_corpus_metadata
 
 # Initialize SymSpell for query correction
 sym_spell = symspellpy.SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
@@ -108,7 +109,7 @@ def checkQueryType(query, index):
 
 
 def main():
-    print("Loading index... (this may take a moment for large indices)")
+    print("Loading index...")
     filepath = 'invertedIndex.txt'
     try:
         index = parseIndex(filepath)
@@ -116,9 +117,22 @@ def main():
     except FileNotFoundError:
         print(f"Error: Could not find {filepath}. Please ensure you have run create-index.py first.")
         return
+
+    print("Initializing BM25 Ranker...")
+    titles, doc_lengths, avgdl, N = load_or_build_corpus_metadata()
+    ranker = BM25Ranker(
+        index=index,
+        doc_lengths=doc_lengths if doc_lengths else None,
+        avgdl=avgdl if avgdl > 0 else None,
+        total_docs=N if N > 0 else None,
+        titles=titles if titles else None,
+        variant="bm25+",
+        proximity_weight=0.5
+    )
+    print(f"BM25 Ranker ready (Corpus size: {ranker.N} docs | avgdl: {ranker.avgdl:.2f} tokens).")
     
     while True:
-        query = input("\nEnter query (or 0 to Exit): ")
+        query = input("\nAsk what you want to know (or 0 to Exit): ")
         if query == '0':
             break
             
@@ -146,7 +160,30 @@ def main():
                 query = f'"{query}"'
 
             res = checkQueryType(query, index)
-            print(f"Found {len(res)} documents: {res[:20]}{'...' if len(res) > 20 else ''}")
+            raw_query = query[1:-1] if is_phrase else query
+
+            if res:
+                # Rank matching candidate documents using BM25+ with proximity weighting
+                ranked_results = ranker.rank(raw_query, candidate_docs=set(res), top_k=10)
+                print(f"\nFound {len(res)} matching documents. Top {len(ranked_results)} ranked results:")
+                print(f"{'Rank':<5} {'Doc ID':<8} {'Score':<10} {'Title'}")
+                print("-" * 65)
+                for rank, (doc_id, score, title) in enumerate(ranked_results, start=1):
+                    print(f"{rank:<5} {doc_id:<8} {score:<10.4f} {title}")
+            else:
+                print(f"No documents matched the strict {'phrase' if is_phrase else 'AND'} criteria for [{query}].")
+                if not is_phrase:
+                    # Fallback to free-text BM25 ranking across the corpus
+                    print("Falling back to free-text BM25 ranking...")
+                    ranked_results = ranker.rank(clean_query, top_k=10)
+                    if ranked_results:
+                        print(f"\nTop {len(ranked_results)} Free-Text Ranked Results:")
+                        print(f"{'Rank':<5} {'Doc ID':<8} {'Score':<10} {'Title'}")
+                        print("-" * 65)
+                        for rank, (doc_id, score, title) in enumerate(ranked_results, start=1):
+                            print(f"{rank:<5} {doc_id:<8} {score:<10.4f} {title}")
+                    else:
+                        print("No matching documents found in corpus.")
         except Exception as e:
             print(f"Error processing query: {e}")
         
